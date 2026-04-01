@@ -2,9 +2,9 @@ import streamlit as st
 import joblib 
 import pandas as pd
 import numpy as np
-model=joblib.load("C:/Users/LATHIKASREE/OneDrive/Desktop/lathika sri/Project1/Assets/attrition_model.pkl")
-label_encoder=joblib.load("C:/Users/LATHIKASREE/OneDrive/Desktop/lathika sri/Project1/Assets/label_encoder.pkl")
-feature_columns=joblib.load("C:/Users/LATHIKASREE/OneDrive/Desktop/lathika sri/Project1/Assets/feature_columns.pkl")
+model=joblib.load("attrition_model.pkl")
+label_encoder=joblib.load("label_encoder.pkl")
+feature_columns=joblib.load("feature_columns.pkl")
 
 st.title("Employee Attrition Prediction")
 
@@ -18,11 +18,26 @@ def get_user_input():
     inputs['OverTime'] = st.sidebar.selectbox("Over Time", options = ["Yes", "No"])
     inputs['DistanceFromHome'] = st.sidebar.number_input("Distance From Home", min_value = 0, max_value = 50, value =10)
 
-data = {}
-for feat in feature_columns:
-    if feat in inputs:
-        data[feat] = inputs[feat]
-    else:
-        data[feat] = 0 
+    data = {}
+    for feat in feature_columns:
+        if feat in inputs:
+            data[feat] = inputs[feat]
+        else:
+            data[feat] = 0 
     return pd.DataFrame(data, index=[0])
 user_input = get_user_input()
+
+user_input['OverTime'] = label_encoder.transform(
+    user_input['OverTime']
+)
+
+# predict the attrition
+if st.button("Predict Attrition"):
+    prediction = model.predict(user_input)
+    probability = model.predict_proba(user_input)[0][1]
+
+    if prediction[0] == 1:
+        st.error("The employee is likely to leave  the company.")
+    else:
+        st.success("The employee is likely to stay with the company.")
+    st.info(f"Prediction Probability:v{probability:.2f}")
